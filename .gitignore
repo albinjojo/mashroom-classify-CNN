@@ -1,0 +1,13 @@
+__pycache__/
+*.pyc
+*.h5
+*.keras
+temp.jpg
+venv/
+.env
+
+# Dataset
+mashrooms_dataset/
+
+# VS Code
+.vscode/
