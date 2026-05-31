@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Mushroom Classifier</title>
+
+    <style>
+        body{
+            margin:0;
+            font-family:Arial, Helvetica, sans-serif;
+            background:#0f172a;
+            color:white;
+            display:flex;
+            justify-content:center;
+            align-items:center;
+            height:100vh;
+        }
+
+        .container{
+            width:400px;
+            background:#1e293b;
+            padding:30px;
+            border-radius:20px;
+            text-align:center;
+            box-shadow:0 0 20px rgba(0,0,0,0.3);
+        }
+
+        h1{
+            margin-bottom:20px;
+        }
+
+        input{
+            margin:20px 0;
+            color:white;
+        }
+
+        button{
+            background:#22c55e;
+            color:white;
+            border:none;
+            padding:12px 20px;
+            border-radius:10px;
+            cursor:pointer;
+            font-size:16px;
+        }
+
+        button:hover{
+            background:#16a34a;
+        }
+
+        img{
+            width:100%;
+            margin-top:20px;
+            border-radius:15px;
+            display:none;
+        }
+
+        .result{
+            margin-top:20px;
+            font-size:20px;
+            font-weight:bold;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+
+        <h1>Mushroom Classifier</h1>
+
+        <input type="file" id="imageInput" accept="image/*">
+
+        <br>
+
+        <button onclick="uploadImage()">Classify Mushroom</button>
+
+        <img id="preview">
+
+        <div class="result" id="result"></div>
+
+    </div>
+
+    <script>
+
+        const imageInput = document.getElementById("imageInput");
+        const preview = document.getElementById("preview");
+        const result = document.getElementById("result");
+
+        imageInput.addEventListener("change", function(){
+
+            const file = this.files[0];
+
+            if(file){
+
+                preview.src = URL.createObjectURL(file);
+                preview.style.display = "block";
+            }
+        });
+
+        async function uploadImage(){
+
+            const file = imageInput.files[0];
+
+            if(!file){
+                alert("Please select an image");
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append("file", file);
+
+            result.innerHTML = "Predicting...";
+
+            try{
+
+                const response = await fetch("http://127.0.0.1:5000/predict", {
+                    method: "POST",
+                    body: formData
+                });
+
+                const data = await response.json();
+
+                result.innerHTML = `
+                    Prediction: ${data.prediction} <br>
+                    Confidence: ${data.confidence}
+                `;
+
+            }catch(error){
+
+                console.error(error);
+
+                result.innerHTML = "Error connecting to model";
+            }
+        }
+
+    </script>
+
+</body>
+</html>th
