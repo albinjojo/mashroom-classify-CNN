@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agrowtein AI Classifier</title>
+
+    <style>
+
+        *{
+            margin:0;
+            padding:0;
+            box-sizing:border-box;
+        }
+
+        body{
+            font-family:Arial, Helvetica, sans-serif;
+            background:linear-gradient(to bottom right,#f7fff9,#e8fff0);
+            min-height:100vh;
+            display:flex;
+            justify-content:center;
+            align-items:center;
+            padding:20px;
+        }
+
+        .card{
+            width:450px;
+            background:white;
+            border-radius:30px;
+            padding:35px;
+            box-shadow:
+            0 10px 40px rgba(0,0,0,0.08);
+            border:1px solid #dff5e6;
+        }
+
+        .top{
+            text-align:center;
+            margin-bottom:25px;
+        }
+
+        .logo{
+            width:220px;
+            margin-bottom:20px;
+        }
+
+        h1{
+            color:#0c8a63;
+            font-size:30px;
+            margin-bottom:10px;
+        }
+
+        .desc{
+            color:#6b7280;
+            font-size:15px;
+            line-height:1.5;
+        }
+
+        .upload-box{
+            margin-top:30px;
+            border:2px dashed #8ed8aa;
+            background:#f8fff9;
+            border-radius:20px;
+            padding:30px;
+            text-align:center;
+            transition:0.3s;
+        }
+
+        .upload-box:hover{
+            border-color:#0c8a63;
+            background:#f0fff4;
+        }
+
+        input{
+            width:100%;
+            margin-top:15px;
+        }
+
+        .preview{
+            width:100%;
+            margin-top:25px;
+            border-radius:20px;
+            display:none;
+            border:1px solid #d7f5df;
+        }
+
+        button{
+            width:100%;
+            margin-top:25px;
+            padding:16px;
+            border:none;
+            border-radius:16px;
+            background:#0c8a63;
+            color:white;
+            font-size:16px;
+            font-weight:600;
+            cursor:pointer;
+            transition:0.3s;
+        }
+
+        button:hover{
+            background:#08694b;
+        }
+
+        .result{
+            margin-top:25px;
+            padding:22px;
+            border-radius:20px;
+            background:#f4fff7;
+            border:1px solid #cdeed7;
+            text-align:center;
+        }
+
+        .prediction{
+            color:#0c8a63;
+            font-size:24px;
+            font-weight:700;
+            margin-bottom:10px;
+        }
+
+        .confidence{
+            color:#4b5563;
+            font-size:16px;
+        }
+
+        .footer{
+            margin-top:25px;
+            text-align:center;
+            color:#94a3b8;
+            font-size:13px;
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="card">
+
+        <div class="top">
+
+            <img src="logo.png" class="logo">
+
+            <h1>Mushroom AI Classifier</h1>
+
+            <p class="desc">
+                Upload a mushroom image to analyze its quality and growth stage using a CNN based classification model.
+            </p>
+
+        </div>
+
+        <div class="upload-box">
+
+            <h3 style="color:#0c8a63;">
+                Upload Mushroom Image
+            </h3>
+
+            <input type="file" id="imageInput" accept="image/*">
+
+        </div>
+
+        <img id="preview" class="preview">
+
+        <button onclick="uploadImage()">
+            Analyze Mushroom
+        </button>
+
+        <div class="result" id="result">
+
+            <div class="prediction">
+                Waiting for image
+            </div>
+
+            <div class="confidence">
+                Confidence will appear here
+            </div>
+
+        </div>
+
+        <div class="footer">
+            Powered by Agrowtein AI Vision
+        </div>
+
+    </div>
+
+    <script>
+
+        const imageInput = document.getElementById("imageInput");
+        const preview = document.getElementById("preview");
+        const result = document.getElementById("result");
+
+        imageInput.addEventListener("change", function(){
+
+            const file = this.files[0];
+
+            if(file){
+
+                preview.src = URL.createObjectURL(file);
+                preview.style.display = "block";
+            }
+        });
+
+        async function uploadImage(){
+
+            const file = imageInput.files[0];
+
+            if(!file){
+                alert("Please select an image");
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append("file", file);
+
+            result.innerHTML = `
+                <div class="prediction">
+                    Analyzing...
+                </div>
+
+                <div class="confidence">
+                    Running CNN prediction
+                </div>
+            `;
+
+            try{
+
+                const response = await fetch("http://127.0.0.1:5000/predict", {
+                    method: "POST",
+                    body: formData
+                });
+
+                const data = await response.json();
+
+                result.innerHTML = `
+                    <div class="prediction">
+                        ${data.prediction}
+                    </div>
+
+                    <div class="confidence">
+                        Confidence: ${data.confidence}
+                    </div>
+                `;
+
+            }catch(error){
+
+                console.error(error);
+
+                result.innerHTML = `
+                    <div class="prediction">
+                        Connection Error
+                    </div>
+
+                    <div class="confidence">
+                        Unable to connect to backend model
+                    </div>
+                `;
+            }
+        }
+
+    </script>
+
+</body>
+</html>
