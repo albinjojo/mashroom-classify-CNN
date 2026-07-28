@@ -1,0 +1,5 @@
+ai-edge-litert
+opencv-python
+flask
+requests
+numpy
