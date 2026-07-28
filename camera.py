@@ -59,7 +59,8 @@ def main() -> None:
                 interpreter.invoke()
                 history.append(as_probabilities(interpreter.get_tensor(output_detail["index"])[0], output_detail))
                 averaged = np.mean(history, axis=0)
-                index, confidence = int(np.argmax(averaged)), float(averaged[index])
+                index = int(np.argmax(averaged))
+                confidence = float(averaged[index])
                 label = DEFAULT_LABELS[index] if confidence >= args.threshold else "Uncertain Detection"
                 last_inference = now
             frames += 1
