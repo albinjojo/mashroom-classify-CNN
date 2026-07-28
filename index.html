@@ -1,7 +1,281 @@
-<!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Agrowtein Live Vision</title><style>
-*{box-sizing:border-box}body{margin:0;font-family:Arial,sans-serif;background:#f3faf5;color:#173c2a}.app{max-width:1100px;margin:auto;padding:26px}.head{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px}.head h1{margin:0;color:#08764f}.badge{background:#e1f7e9;color:#08764f;padding:9px 13px;border-radius:99px;font-weight:bold}.grid{display:grid;grid-template-columns:1.5fr 1fr;gap:20px}.panel{background:#fff;border:1px solid #d8eddf;border-radius:22px;padding:20px;box-shadow:0 8px 30px #1231}.camera{width:100%;aspect-ratio:4/3;object-fit:cover;background:#193e2c;border-radius:15px}.label{font-size:31px;line-height:1.15;font-weight:800;color:#08764f;margin:15px 0}.confidence{font-size:21px}.stats{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:18px}.stat{padding:15px;background:#f1fbf4;border-radius:14px}.stat b{display:block;font-size:22px;margin-top:5px}.muted{color:#68776e}.offline{color:#aa3a26}.online{color:#08764f}@media(max-width:720px){.grid{grid-template-columns:1fr}.app{padding:14px}.label{font-size:27px}}</style></head>
-<body><main class="app"><header class="head"><div><h1>Agrowtein AI Vision</h1><div class="muted">Live mushroom condition monitoring</div></div><div id="status" class="badge offline">Camera connecting</div></header>
-<section class="grid"><div class="panel"><img id="camera" class="camera" alt="Live Pi camera feed"><div class="muted" style="margin-top:10px">Live camera frame from Raspberry Pi</div></div><aside class="panel"><div class="muted">CURRENTLY SHOWN</div><div id="label" class="label">Waiting for camera</div><div id="confidence" class="confidence">Confidence: —</div><div class="stats"><div class="stat"><span class="muted">Camera FPS</span><b id="fps">—</b></div><div class="stat"><span class="muted">Last update</span><b id="updated">—</b></div></div></aside></section></main>
-<script>const el=id=>document.getElementById(id);let last='';async function refresh(){try{const d=await fetch('/api/live',{cache:'no-store'}).then(r=>r.json());el('label').textContent=d.label;el('confidence').textContent=`Confidence: ${d.confidence.toFixed(1)}%`;el('fps').textContent=d.fps.toFixed(1);el('updated').textContent=d.updated_at?new Date(d.updated_at).toLocaleTimeString():'—';el('status').textContent=d.has_frame?'Camera live':'Waiting for camera';el('status').className='badge '+(d.has_frame?'online':'offline');if(d.has_frame){const src='/api/frame.jpg?t='+Date.now();if(src!==last){el('camera').src=src;last=src}}}catch{el('status').textContent='Dashboard disconnected';el('status').className='badge offline'}}refresh();setInterval(refresh,300)</script></body></html>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Agrowtein AI Vision</title>
+  <meta name="description" content="AI Powered Mushroom Quality Analysis System by Agrowtein" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <!-- ════════════════════════════════════════
+       AMBIENT BACKGROUND
+       ════════════════════════════════════════ -->
+  <div class="bg-ambient">
+    <div class="bg-orbe bg-orbe--1"></div>
+    <div class="bg-orbe bg-orbe--2"></div>
+    <div class="bg-orbe bg-orbe--3"></div>
+    <div class="bg-grid"></div>
+  </div>
+
+  <!-- ════════════════════════════════════════
+       HEADER — Glassmorphism
+       ════════════════════════════════════════ -->
+  <header class="header">
+    <div class="header-inner container">
+      <div class="logo-area">
+        <!-- Premium inline SVG logo -->
+        <svg class="logo" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" aria-label="Agrowtein">
+          <rect width="48" height="48" rx="12" fill="#03856D"/>
+          <path d="M14 28C14 22.477 18.477 18 24 18C29.523 18 34 22.477 34 28" stroke="white" stroke-width="2.5" stroke-linecap="round"/>
+          <path d="M18 28C18 24.686 20.686 22 24 22C27.314 22 30 24.686 30 28" stroke="#00B894" stroke-width="2" stroke-linecap="round"/>
+          <circle cx="24" cy="28" r="3" fill="#00B894"/>
+          <path d="M24 18V14" stroke="white" stroke-width="2" stroke-linecap="round"/>
+          <path d="M24 14L21 10" stroke="white" stroke-width="1.5" stroke-linecap="round"/>
+          <path d="M24 14L27 10" stroke="white" stroke-width="1.5" stroke-linecap="round"/>
+          <circle cx="24" cy="28" r="8" stroke="rgba(255,255,255,0.15)" stroke-width="1" fill="none"/>
+          <circle cx="24" cy="28" r="13" stroke="rgba(255,255,255,0.08)" stroke-width="1" fill="none"/>
+        </svg>
+        <div class="brand-text">
+          <h1 class="brand-title">
+            Agrowtein <span class="brand-accent">AI</span>
+          </h1>
+          <p class="brand-subtitle">AI Powered Mushroom Quality Analysis</p>
+        </div>
+      </div>
+      <div class="header-badge">
+        <span class="badge-dot"></span>
+        Connecting to Pi
+      </div>
+    </div>
+  </header>
+
+  <!-- ════════════════════════════════════════
+       MAIN
+       ════════════════════════════════════════ -->
+  <main class="main container">
+
+    <!-- ─── Camera Card ─────────────────── -->
+    <section class="camera-card" id="cameraCard">
+      <!-- Glass sheen overlay -->
+      <div class="camera-sheen"></div>
+
+      <!-- Placeholder state -->
+      <div class="camera-placeholder" id="cameraPlaceholder">
+        <div class="placeholder-icon-ring">
+          <svg width="72" height="72" viewBox="0 0 72 72" fill="none">
+            <circle cx="36" cy="36" r="34" stroke="#03856D" stroke-width="1.5" stroke-dasharray="4 4" opacity="0.3"/>
+            <rect x="20" y="26" width="32" height="22" rx="4" stroke="#03856D" stroke-width="2" fill="none"/>
+            <circle cx="36" cy="37" r="6" stroke="#03856D" stroke-width="2" fill="none"/>
+            <path d="M28 26L30 20H42L44 26" stroke="#03856D" stroke-width="2" fill="none" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <p class="placeholder-title">Camera Not Started</p>
+        <p class="placeholder-sub">Click <strong>Start Analysis</strong> to begin<br/>mushroom quality inspection</p>
+      </div>
+
+      <!-- Live video -->
+      <video id="videoFeed" class="video-feed hidden" autoplay playsinline></video>
+
+      <!-- Scan line overlay (active during analysis) -->
+      <div id="scanOverlay" class="scan-overlay hidden">
+        <div class="scan-line"></div>
+        <div class="scan-corner scan-corner--tl"></div>
+        <div class="scan-corner scan-corner--tr"></div>
+        <div class="scan-corner scan-corner--bl"></div>
+        <div class="scan-corner scan-corner--br"></div>
+      </div>
+
+      <!-- Hidden canvas for frame capture -->
+      <canvas id="hiddenCanvas" class="hidden"></canvas>
+
+      <!-- Live indicator -->
+      <div id="liveIndicator" class="live-indicator hidden">
+        <span class="live-dot"></span>
+        <span class="live-label">AI Analyzing</span>
+        <span class="live-dots">
+          <span></span><span></span><span></span>
+        </span>
+      </div>
+
+      <!-- Detection counter badge -->
+      <div id="detectCount" class="detect-count hidden">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+          <circle cx="7" cy="7" r="6" stroke="#E53935" stroke-width="1.5" opacity="0.4"/>
+          <circle cx="7" cy="7" r="6" stroke="#E53935" stroke-width="1.5" stroke-dasharray="30" stroke-dashoffset="6" transform="rotate(-90 7 7)"/>
+        </svg>
+        <span id="badgeCount">0</span> threats
+      </div>
+    </section>
+
+    <!-- ─── Buttons ─────────────────────── -->
+    <div class="btn-group">
+      <button id="btnStart" class="btn btn-primary">
+        <span class="btn-shine"></span>
+        <svg class="btn-icon" width="18" height="18" viewBox="0 0 18 18" fill="none">
+          <circle cx="9" cy="9" r="7" stroke="currentColor" stroke-width="1.5"/>
+          <path d="M7 6V12L12 9L7 6Z" fill="currentColor"/>
+        </svg>
+        Start Analysis
+      </button>
+      <button id="btnStop" class="btn btn-danger hidden">
+        <svg class="btn-icon" width="18" height="18" viewBox="0 0 18 18" fill="none">
+          <rect x="4" y="4" width="10" height="10" rx="2" fill="currentColor"/>
+        </svg>
+        Stop Analysis
+      </button>
+    </div>
+
+    <!-- ─── Result Section ──────────────── -->
+    <section id="resultSection" class="result-section hidden">
+
+      <div class="section-header">
+        <span class="section-line"></span>
+        <h2 class="section-title">Analysis Results</h2>
+        <span class="section-line"></span>
+      </div>
+
+      <div class="stats-grid">
+        <!-- Fully Grown -->
+        <div class="stat-card stat-card--grown">
+          <div class="stat-ring">
+            <svg viewBox="0 0 100 100">
+              <circle class="stat-ring-bg" cx="50" cy="50" r="42"/>
+              <circle class="stat-ring-fill" id="ringGrown" cx="50" cy="50" r="42"
+                      stroke-dasharray="264" stroke-dashoffset="264"
+                      transform="rotate(-90 50 50)"/>
+            </svg>
+            <div class="stat-ring-icon">🍄</div>
+          </div>
+          <div class="stat-body">
+            <span class="stat-label">Good / Mature</span>
+            <span class="stat-number" id="statFullyGrown">0</span>
+          </div>
+        </div>
+
+        <!-- Medium Grown -->
+        <div class="stat-card stat-card--medium">
+          <div class="stat-ring">
+            <svg viewBox="0 0 100 100">
+              <circle class="stat-ring-bg" cx="50" cy="50" r="42"/>
+              <circle class="stat-ring-fill" id="ringMedium" cx="50" cy="50" r="42"
+                      stroke-dasharray="264" stroke-dashoffset="264"
+                      transform="rotate(-90 50 50)"/>
+            </svg>
+            <div class="stat-ring-icon">🌿</div>
+          </div>
+          <div class="stat-body">
+            <span class="stat-label">Medium Grown</span>
+            <span class="stat-number" id="statMedium">0</span>
+          </div>
+        </div>
+
+        <!-- Bud -->
+        <div class="stat-card stat-card--bud">
+          <div class="stat-ring">
+            <svg viewBox="0 0 100 100">
+              <circle class="stat-ring-bg" cx="50" cy="50" r="42"/>
+              <circle class="stat-ring-fill" id="ringBud" cx="50" cy="50" r="42"
+                      stroke-dasharray="264" stroke-dashoffset="264"
+                      transform="rotate(-90 50 50)"/>
+            </svg>
+            <div class="stat-ring-icon">🌱</div>
+          </div>
+          <div class="stat-body">
+            <span class="stat-label">Bud</span>
+            <span class="stat-number" id="statBud">0</span>
+          </div>
+        </div>
+
+        <!-- Bad -->
+        <div class="stat-card stat-card--bad">
+          <div class="stat-ring">
+            <svg viewBox="0 0 100 100">
+              <circle class="stat-ring-bg" cx="50" cy="50" r="42"/>
+              <circle class="stat-ring-fill" id="ringBad" cx="50" cy="50" r="42"
+                      stroke-dasharray="264" stroke-dashoffset="264"
+                      transform="rotate(-90 50 50)"/>
+            </svg>
+            <div class="stat-ring-icon">⚠️</div>
+          </div>
+          <div class="stat-body">
+            <span class="stat-label">Bad Mushrooms</span>
+            <span class="stat-number stat-number--danger" id="statBad">0</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- ─── Export / Action Row ──────── -->
+      <div class="action-row">
+        <button id="btnExportPDF" class="btn btn-export hidden" onclick="exportPDF()">
+          <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+            <path d="M4 13V15H14V13" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M9 3V11M9 11L12 8M9 11L6 8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          Export PDF Report
+        </button>
+      </div>
+
+      <!-- ─── Bad Mushroom Gallery ──────── -->
+      <div class="gallery" id="gallery">
+        <div class="gallery-header">
+          <h3 class="gallery-title">
+            <span class="gallery-title-icon">
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                <circle cx="10" cy="10" r="8" stroke="#E53935" stroke-width="1.5"/>
+                <path d="M10 6V10L13 13" stroke="#E53935" stroke-width="1.5" stroke-linecap="round"/>
+              </svg>
+            </span>
+            Captured Bad Mushrooms
+          </h3>
+          <span class="gallery-badge" id="galleryBadge">0 images</span>
+        </div>
+        <div class="gallery-grid" id="galleryGrid">
+          <!-- dynamically populated -->
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ════════════════════════════════════════
+       LIGHTBOX
+       ════════════════════════════════════════ -->
+  <div id="lightbox" class="lightbox hidden" onclick="closeLightbox(event)">
+    <div class="lightbox-content">
+      <button class="lightbox-close" onclick="closeLightbox()">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+          <path d="M6 6L18 18M18 6L6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+      </button>
+      <img id="lightboxImg" src="" alt="Bad mushroom — enlarged view" />
+      <div class="lightbox-meta" id="lightboxMeta"></div>
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════════════
+       FOOTER
+       ════════════════════════════════════════ -->
+  <footer class="footer">
+    <div class="footer-inner container">
+      <div class="footer-divider"></div>
+      <div class="footer-content">
+        <svg class="footer-logo" width="24" height="24" viewBox="0 0 48 48" fill="none">
+          <rect width="48" height="48" rx="12" fill="#03856D"/>
+          <path d="M14 28C14 22.477 18.477 18 24 18C29.523 18 34 22.477 34 28" stroke="white" stroke-width="2.5" stroke-linecap="round"/>
+          <circle cx="24" cy="28" r="3" fill="#00B894"/>
+          <path d="M24 18V14" stroke="white" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+        <p class="footer-text">Agrowtein AI Vision System</p>
+        
+      </div>
+    </div>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>
