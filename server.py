@@ -20,6 +20,12 @@ def index():
     return send_from_directory(ROOT, "index.html")
 
 
+@app.get("/<path:asset>")
+def static_asset(asset: str):
+    """Serve dashboard assets referenced by index.html (CSS, JavaScript, logo)."""
+    return send_from_directory(ROOT, asset)
+
+
 @app.get("/api/live")
 def get_live():
     with lock:
