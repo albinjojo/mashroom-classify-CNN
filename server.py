@@ -17,7 +17,7 @@ latest_jpeg: bytes | None = None
 
 @app.get("/")
 def index():
-    return send_from_directory(ROOT, "mushroom_live_index.html")
+    return send_from_directory(ROOT, "index.html")
 
 
 @app.get("/api/live")
